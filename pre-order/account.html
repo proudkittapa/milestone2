@@ -1,0 +1,93 @@
+  <!DOCTYPE html>
+  <html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+      <!-- Bootstrap CSS -->
+      <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+      <!-- title -->
+    <title>Pin to Pre | Website for pre order</title>
+    <link href="account.css" rel="stylesheet" type="text/css" />
+  </head>
+
+  <body>
+
+    <div class=".container" >
+          <!------------navigation bar(menu bar)------------>
+      <div class="menu-bar">
+        <div class="logo">
+          <img src="images/PinToPre.png" width="125px">
+              </div>
+              <nav>
+                <ul>
+                  <li><a href="index.html">Home</a><i class="fa fa-home" aria-hidden="true"></i> </li>
+                  <li>
+                  <a href="pre_order.html">Pre order</a><i class="fa fa-gratipay" aria-hidden="true"></i></li>
+                  <li><a href="pre_form.html">Promotion</a><i class="fa fa-tag" aria-hidden="true"></i></li>
+                  <li class="active" ><a href="account.html">Account</a><i class="fa fa-user-circle" aria-hidden="true"></i></li>
+                  <li><a href="about_us.html">About us</a><i class="fa fa-phone" aria-hidden="true"></i></li>
+                </ul>
+              </nav>
+          </div>
+      </div>
+
+      <!------------login page------------>
+      <div class = "account-page">
+        <div class="container">
+          <div class = "row">
+            <div class= "col-2">
+              <img src= "images/png white.png" width="100%">
+            </div>
+
+            <div class= "col-2">
+              <div class="form-container">
+                <div class="form-btn">
+                <span onclick="Login()">Login</span>
+                <span onclick="Register()">Register</span>
+                <hr id="Indicator"
+            </div>
+
+            
+          <form action="LoginForm" method="post">
+              <input type="text" name="username"placeholder="Username">
+              <input type="password" name="password"placeholder="Password">
+              <button type="submit" class="btn" value="Login" name = "button">Login</button>
+              
+            </form>
+
+
+            <form action="RegForm" method="post">
+              <input type="text" name="username" placeholder="Username">
+              <input type="email" name="email" placeholder="Email">
+              <input type="password" name="password" placeholder="Password">
+              <button type="submit" value="Login" name="buttun"class="btn">Register</button>
+    
+            </form>
+          </div> 
+        </div>
+      </div>
+
+      <!-- -----js for login form ---- -->
+      <script>
+
+      var LoginForm = document.getElementById("LoginForm");
+      var RegForm = document.getElementById("RegForm");
+      var Indicator = document.getElementById("Indicator");
+
+        function Register(){
+
+          RegForm.style.transform = "translateX(0px)";
+          LoginForm.style.
+        }
+      
+
+
+      <!-- Optional JavaScript -->
+      <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+      <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+      <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>
+      <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js" integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV" crossorigin="anonymous"></script>
+
+    </body>
+  </html>
