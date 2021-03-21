@@ -11,8 +11,6 @@ import (
 	"net"
 	"os"
 	"pin2pre/cacheFile"
-
-	// "preorder/cacheFile"
 	"regexp"
 	"strconv"
 	"strings"
@@ -27,14 +25,13 @@ type display struct {
 }
 
 var mp map[int]string = make(map[int]string)
+var cacheObject cacheFile.Cache = cacheFile.NewCache()
 
 type data struct {
 	Name     string `json:"name"`
 	Quantity int    `json:"quantity"`
 	Price    int    `json:"price"`
 }
-
-var cacheF cacheFile.Cache = cacheFile.NewCache()
 
 var (
 	db          *sql.DB
@@ -75,7 +72,7 @@ func handle(conn net.Conn) {
 }
 
 func req(conn net.Conn) {
-	defer conn.Close()
+	// defer conn.Close()
 	buffer := make([]byte, 1024)
 	for {
 		n, err := conn.Read(buffer)
@@ -100,24 +97,30 @@ func req(conn net.Conn) {
 
 		if p[1] == "" {
 			home(conn, method, "pre-order/index.html", "text/html")
+			break
 		} else if p[1] == "products" {
 			if (len(p) > 2) && (p[2] != "") {
 				fmt.Println("message", message)
 				result := getJson(message)
 				// fmt.Println(result)
 				productWithID(conn, method, p[2], result)
+				break
 			} else {
+				fmt.Println("HI")
 				products(conn, method)
+				break
 			}
 
 		} else if p[1] == "style.css" {
 			home(conn, method, "pre-order/style.css", "text/css")
+			break
 		} else if p[1] == "images" {
 			f := p[2]
-			fmt.Println(f)
+			// fmt.Println(f)
 			nf := "pre-order/images/" + f
-			fmt.Println(nf)
+			// fmt.Println(nf)
 			homeImg(conn, method, nf, "image/apng")
+			break
 			// if p[2] == "PinToPre.png" {
 			// 	home(conn, method, "pre-order/images/PinToPre.png")
 			// }
@@ -151,7 +154,7 @@ func home(conn net.Conn, method string, filename string, t string) {
 	if method == "GET" {
 		// d := getFile()
 		c := t
-		d := getFile(filename)
+		d := call_cache(filename)
 		send(conn, d, c)
 	}
 }
@@ -191,7 +194,9 @@ func productWithID(conn net.Conn, method string, id string, result data) {
 	fmt.Println("ID")
 	i, _ := strconv.Atoi(id)
 	if method == "GET" {
+		mutex.Lock()
 		d := cache(i)
+		mutex.Unlock()
 		// d := "abc"
 		c := "application/json"
 		send(conn, d, c)
@@ -218,18 +223,30 @@ func productWithID(conn net.Conn, method string, id string, result data) {
 
 }
 
-func call_cache(filename string) {
-	// box := []string{"index.html", "style.css"}
-	// for _, word := range box {
-	var key [16]byte
-	copy(key[:], []byte(filename))
-	cacheF.Check(key)
-	cacheF.Display()
-	// getFile()
+func call_cache(filename string) string {
+	start := time.Now()
+	d, err := cacheObject.Check(filename)
+	if err != nil {
+		fmt.Println(err)
+		a := getFile(filename)
+		cacheObject.Add(filename, a)
+		d, _ = cacheObject.Check(filename)
+		cacheObject.Display()
+
+		fmt.Println("Time calling cache miss: ", time.Since(start))
+		return d
+	} else {
+		cacheObject.Display()
+
+		fmt.Println("Time calling cache hit: ", time.Since(start))
+		return d
+	}
+
 }
 
 func getFile(filename string) string {
-	call_cache(filename)
+	// call_cache(filename)
+	start := time.Now()
 	f, err := os.Open(filename)
 	if err != nil {
 		fmt.Println("File reading error", err)
@@ -254,6 +271,7 @@ func getFile(filename string) string {
 		buffer.Write(part[:count])
 	}
 	// fmt.Println("home")
+	fmt.Println("Time get file: ", time.Since(start))
 	return buffer.String()
 	// contentType = "text/html"
 	// headers = fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Length: %d\r\nContent-Type: %s\r\n\n%s", bufferLen, contentType, buffer)
@@ -325,6 +343,7 @@ func db_query(id int) string {
 		mp[id] = string(byteArray)
 
 	}
+	rows.Close()
 	val := mp[id]
 	fmt.Printf("time query from db: %v\n", time.Since(start))
 	return val
@@ -378,11 +397,10 @@ func decrement(t chan int, transactionC chan bool, orderQuantity int, id int) {
 		var name string
 		var price int
 		err = rows.Scan(&name, &price)
-
+		rows.Close()
 		result := data{Name: name, Quantity: newQuantity, Price: price}
 		byteArray, err := json.Marshal(result)
 		checkErr(err)
-
 		mp[id] = string(byteArray)
 	}
 
