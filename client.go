@@ -74,9 +74,9 @@ func main() {
 		wg.Add(1)
 
 		go client6(&wg, "GET", "/")
-		// go client6(&wg, "GET", "/products")
+		//go client6(&wg, "GET", "/products")
 		// go client6(&wg, "GET", "/products/2")
-		// go client6("POST", "/products/3")
+		// go client6(&wg, "POST", "/products/3")
 	}
 	wg.Wait()
 	// time.Sleep(100 * time.Millisecond)
