@@ -51,7 +51,6 @@ func main() {
 	li, err := net.Listen("tcp", ":8080")
 	if err != nil {
 		log.Fatalln(err.Error())
-		// fmt.Println("count error:", count)
 	}
 	defer li.Close()
 	for {
@@ -72,17 +71,13 @@ func handle(conn net.Conn) {
 }
 
 func req(conn net.Conn) {
-	// defer conn.Close()
 	buffer := make([]byte, 1024)
 	for {
 		n, err := conn.Read(buffer)
 		if err != nil {
-			// fmt.Println("error req")
 			fmt.Fprintln(os.Stderr, err)
 		}
 		message := string(buffer[:n])
-		// fmt.Fprintln(os.Stderr, message)
-		// fmt.Println("message", message)
 		if !strings.Contains(message, "HTTP") {
 			if _, err := conn.Write([]byte("Recieved\n")); err != nil {
 				log.Printf("failed to respond to client: %v\n", err)
@@ -92,7 +87,6 @@ func req(conn net.Conn) {
 		headers := strings.Split(message, "\n")
 		method := (strings.Split(headers[0], " "))[0]
 		path := (strings.Split(headers[0], " "))[1]
-
 		p := strings.Split(path, "/")
 
 		if p[1] == "" {
@@ -110,20 +104,14 @@ func req(conn net.Conn) {
 				products(conn, method)
 				break
 			}
-
 		} else if p[1] == "style.css" {
 			home(conn, method, "pre-order/style.css", "text/css")
 			break
 		} else if p[1] == "images" {
 			f := p[2]
-			// fmt.Println(f)
 			nf := "pre-order/images/" + f
-			// fmt.Println(nf)
 			homeImg(conn, method, nf, "image/apng")
 			break
-			// if p[2] == "PinToPre.png" {
-			// 	home(conn, method, "pre-order/images/PinToPre.png")
-			// }
 		}
 	}
 
@@ -134,37 +122,19 @@ func getJson(message string) data {
 	if strings.ContainsAny(string(message), "}") {
 
 		r, _ := regexp.Compile("{([^)]+)}")
-		// match, _ := regexp.MatchString("{([^)]+)}", message)
-		// fmt.Println(r.FindString(message))
 		match := r.FindString(message)
 		fmt.Println(match)
-		// match = "`\n"+match+"\n`"
 		fmt.Printf("%T\n", match)
 		json.Unmarshal([]byte(match), &result)
 		fmt.Println("data", result)
-		// fmt.Println("Name", result.Name)
-		// fmt.Println("Quantity", result.Quantity)
-		// fmt.Println("Price", result.Price)
 	}
 	return result
 }
 
-func home(conn net.Conn, method string, filename string, t string) {
-	// fmt.Println("home")
-	if method == "GET" {
-		// d := getFile()
-		c := t
-		d := call_cache(filename)
-		send(conn, d, c)
-	}
-}
-
 func homeImg(conn net.Conn, method string, filename string, t string) {
 	if method == "GET" {
-		// d := getFile()
 		c := t
 		d, _ := getImageFromFilePath(filename)
-
 		sendFile(conn, d, c)
 	}
 }
@@ -179,12 +149,17 @@ func getImageFromFilePath(filePath string) (image.Image, error) {
 	return image, err
 }
 
+func home(conn net.Conn, method string, filename string, t string) {
+	if method == "GET" {
+		c := t
+		d := call_cache(filename)
+		send(conn, d, c)
+	}
+}
+
 func products(conn net.Conn, method string) {
-	// fmt.Println("products")
-	// fmt.Fprintln(os.Stderr, "products")
 	if method == "GET" {
 		d := display_pro()
-		// d := "asd"
 		c := "application/json"
 		send(conn, d, c)
 	}
@@ -197,7 +172,6 @@ func productWithID(conn net.Conn, method string, id string, result data) {
 		mutex.Lock()
 		d := cache(i)
 		mutex.Unlock()
-		// d := "abc"
 		c := "application/json"
 		send(conn, d, c)
 	} else if method == "POST" {
@@ -210,7 +184,6 @@ func productWithID(conn net.Conn, method string, id string, result data) {
 		} else {
 			msg = "fail"
 		}
-
 		jsonStr := respond{Msg: msg}
 		jsonData, err := json.Marshal(jsonStr)
 		if err != nil {
@@ -278,10 +251,6 @@ func getFile(filename string) string {
 
 }
 
-func send(conn net.Conn, d string, c string) {
-	fmt.Fprintf(conn, createHeader(d, c))
-}
-
 func sendFile(conn net.Conn, d image.Image, c string) {
 	fmt.Fprintf(conn, createHeaderFile(d, c))
 }
@@ -295,13 +264,14 @@ func createHeaderFile(d image.Image, contentType string) string {
 	return headers
 }
 
+func send(conn net.Conn, d string, c string) {
+	fmt.Fprintf(conn, createHeader(d, c))
+}
+
 //create header function
 func createHeader(d string, contentType string) string {
-
 	contentLength := len(d)
-
 	headers := fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Length: %d\r\nContent-Type: %s\r\n\n%s", contentLength, contentType, d)
-	// fmt.Println(headers)
 	return headers
 }
 
@@ -392,16 +362,15 @@ func decrement(t chan int, transactionC chan bool, orderQuantity int, id int) {
 	db.Exec("update products set quantity_in_stock = ? where product_id = ? ", newQuantity, id)
 
 	if _, ok := mp[id]; ok {
-		rows, err := db.Query("SELECT name, unit_price FROM products WHERE product_id = " + strconv.Itoa(id))
-		checkErr(err)
-		var name string
-		var price int
-		err = rows.Scan(&name, &price)
-		rows.Close()
-		result := data{Name: name, Quantity: newQuantity, Price: price}
+		info := cache(id)
+		var quan data
+		err := json.Unmarshal([]byte(info), &quan)
+
+		result := data{Name: quan.Name, Quantity: newQuantity, Price: quan.Price}
 		byteArray, err := json.Marshal(result)
 		checkErr(err)
 		mp[id] = string(byteArray)
+		fmt.Println("punepit eiei", mp[id])
 	}
 
 	transactionC <- true
