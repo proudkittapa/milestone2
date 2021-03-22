@@ -70,13 +70,13 @@ func main() {
 	// flag.Parse()
 	var wg sync.WaitGroup
 	start := time.Now()
-	for i := 0; i < 200; i++ {
+	for i := 0; i < 10; i++ {
 		wg.Add(1)
 
-		go client6(&wg, "GET", "/")
+		// go client6(&wg, "GET", "/")
 		//go client6(&wg, "GET", "/products")
 		// go client6(&wg, "GET", "/products/2")
-		// go client6(&wg, "POST", "/products/3")
+		go client6(&wg, "POST", "/products/5")
 	}
 	wg.Wait()
 	// time.Sleep(100 * time.Millisecond)
